@@ -1,4 +1,3 @@
-
 -- Simple SQL Authentication module for Prosody IM
 -- Copyright (C) 2011 Tomasz Sterna <tomek@xiaoka.com>
 -- Copyright (C) 2011 Waqas Hussain <waqas20@gmail.com>
@@ -12,7 +11,6 @@ local DBI = require "DBI"
 
 local connection;
 local params = module:get_option("auth_sql", module:get_option("sql"));
-local sql_request = module:get_option_string("auth_sql_request");
 
 local resolve_relative_path = require "core.configmanager".resolve_relative_path;
 
@@ -75,7 +73,7 @@ local function getsql(sql, ...)
 end
 
 local function get_password(username)
-        local stmt, err = getsql(sql_request, username, module.host);
+        local stmt, err = getsql("SELECT `?` FROM `?` WHERE `?`=? AND ?", params.password_row, params.users_table, params.user_row, username, params.condition:gsub("$host",module.host));
         if stmt then
                 for row in stmt:rows(true) do
                         return row.password;
@@ -113,7 +111,7 @@ function provider.get_sasl_handler()
 end
 
 function provider.users()
-        local stmt, err = getsql("SELECT `username` FROM `authreg` WHERE `realm`=?", module.host);
+        local stmt, err = getsql("SELECT `?` FROM `?` WHERE ?", params.user_row, params.users_table, params.condition:gsub("$host",module.host));
         if stmt then
                 local next, state = stmt:rows(true)
                 return function()
